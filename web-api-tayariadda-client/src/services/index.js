@@ -65,6 +65,14 @@ export async function fetchInstructorCourseListService() {
   return data;
 }
 
+export async function fetchInstructorDashboardAnalyticsService(instructorId) {
+  const { data } = await axiosInstance.get(
+    `/instructor/course/get-instructor-dashboard-analytics/${instructorId}`
+  );
+
+  return data;
+}
+
 export async function addNewCourseService(formData) {
   const { data } = await axiosInstance.post(`/instructor/course/add`, formData);
 
@@ -207,3 +215,31 @@ export async function fetchStudentStatsService(userId) {
 
   return data;
 }
+
+// Admin Quiz Management Services
+export async function fetchQuizSetByIdService(id) {
+  const { data } = await axiosInstance.get(`/instructor/quiz/get/${id}`);
+  return data;
+}
+
+export async function updateQuizSetService(id, formData) {
+  const { data } = await axiosInstance.put(`/instructor/quiz/update/${id}`, formData);
+  return data;
+}
+
+export async function deleteQuizSetService(id) {
+  const { data } = await axiosInstance.delete(`/instructor/quiz/delete/${id}`);
+  return data;
+}
+
+export async function fetchAllQuizSetsService() {
+  const { data } = await axiosInstance.get(`/instructor/quiz/`);
+  return data;
+}
+
+// Student Quiz Services
+export async function fetchStudentQuizByIdService(id) {
+  const { data } = await axiosInstance.get(`/student/quiz/get/${id}`);
+  return data;
+}
+

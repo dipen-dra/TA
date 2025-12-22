@@ -4,7 +4,8 @@ const {
   getAllCourses,
   getCourseDetailsByID,
   updateCourseByID,
-  deleteCourseByID
+  deleteCourseByID,
+  getInstructorDashboardAnalytics
 } = require("../../controllers/instructor-controller/course-controller");
 const router = express.Router();
 
@@ -13,5 +14,6 @@ router.get("/get", getAllCourses);
 router.get("/get/details/:id", getCourseDetailsByID);
 router.put("/update/:id", updateCourseByID);
 router.delete("/delete/:id", deleteCourseByID);
+router.get("/get-instructor-dashboard-analytics/:instructorId", getInstructorDashboardAnalytics);
 
 module.exports = router;

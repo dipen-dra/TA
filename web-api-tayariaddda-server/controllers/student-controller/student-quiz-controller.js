@@ -59,4 +59,37 @@ const getStudentQuizResults = async (req, res) => {
     }
 };
 
-module.exports = { saveQuizResult, getStudentQuizResults };
+const QuizSet = require("../../models/Quiz");
+const Question = require("../../models/Question");
+
+const getQuizById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const quizSet = await QuizSet.findById(id).lean();
+
+        if (!quizSet) {
+            return res.status(404).json({ success: false, message: "Quiz Set not found" });
+        }
+
+        // Fetch questions associated with this quiz set
+        const questions = await Question.find({ quizSetId: id }).lean();
+
+        // Combine quiz set data with questions
+        res.status(200).json({
+            success: true,
+            data: {
+                ...quizSet,
+                questions
+            }
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            success: false,
+            message: "Error fetching quiz",
+            error: error.message
+        });
+    }
+};
+
+module.exports = { saveQuizResult, getStudentQuizResults, getQuizById };

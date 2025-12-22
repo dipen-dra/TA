@@ -12,7 +12,18 @@ import {
   mediaDeleteService,
   mediaUploadService,
 } from "@/services";
-import { Upload, Trash, FileVideo } from "lucide-react";
+import { Upload, Trash, FileVideo, Youtube, AlertTriangle } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useContext, useRef } from "react";
 
 function CourseCurriculum() {
@@ -156,9 +167,8 @@ function CourseCurriculum() {
           ...response?.data.map((item, index) => ({
             videoUrl: item?.url,
             public_id: item?.public_id,
-            title: `Lecture ${
-              cpyCourseCurriculumFormdata.length + (index + 1)
-            }`,
+            title: `Lecture ${cpyCourseCurriculumFormdata.length + (index + 1)
+              }`,
             freePreview: false,
           })),
         ];
@@ -284,34 +294,100 @@ function CourseCurriculum() {
                       >
                         Replace Video
                       </Button>
-                      <Button
-                        onClick={() => handleDeleteLecture(index)}
-                        className="bg-red-600 text-white hover:bg-red-700 transition rounded-lg px-4 py-2 shadow-md flex items-center gap-2"
-                      >
-                        <Trash className="w-5 h-5" />
-                        Delete Lecture
-                      </Button>
+
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="destructive"
+                            className="bg-red-600 text-white hover:bg-red-700 transition rounded-lg px-4 py-2 shadow-md flex items-center gap-2"
+                          >
+                            <Trash className="w-5 h-5" />
+                            Delete Lecture
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="bg-white">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+                              <AlertTriangle className="w-5 h-5" />
+                              Are you sure?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will delete this lecture permanently. If you have uploaded a video, it will be removed.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDeleteLecture(index)} className="bg-red-600 hover:bg-red-700 text-white">
+                              Yes, Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col">
-                    {/* Improved File Input for Better UI */}
-                    <label
-                      htmlFor={`video-upload-${index}`}
-                      className="flex items-center justify-center w-full px-4 py-3 text-blue-800 bg-blue-100 rounded-lg cursor-pointer hover:bg-blue-200"
-                    >
-                      <FileVideo className="w-5 h-5 mr-2" />
-                      Upload Video
-                    </label>
-                    <input
-                      id={`video-upload-${index}`}
-                      type="file"
-                      accept="video/*"
-                      onChange={(event) =>
-                        handleSingleLectureUpload(event, index)
-                      }
-                      className="hidden"
-                    />
+                  <div className="flex flex-col gap-3">
+                    {/* Video Source Selection */}
+                    <div className="flex gap-4 mb-2">
+                      <Button
+                        type="button" // Prevent form submission
+                        variant={curriculumItem?.videoType === "youtube" ? "outline" : "default"}
+                        onClick={() => {
+                          let cpy = [...courseCurriculumFormData];
+                          cpy[index] = { ...cpy[index], videoType: "file" };
+                          setCourseCurriculumFormData(cpy);
+                        }}
+                        className={`flex-1 ${curriculumItem?.videoType !== "youtube" ? "bg-blue-600 text-white" : "border-gray-200 text-gray-600"}`}
+                      >
+                        <Upload className="w-4 h-4 mr-2" /> Upload File
+                      </Button>
+                      <Button
+                        type="button" // Prevent form submission
+                        variant={curriculumItem?.videoType === "youtube" ? "default" : "outline"}
+                        onClick={() => {
+                          let cpy = [...courseCurriculumFormData];
+                          cpy[index] = { ...cpy[index], videoType: "youtube" };
+                          setCourseCurriculumFormData(cpy);
+                        }}
+                        className={`flex-1 ${curriculumItem?.videoType === "youtube" ? "bg-red-600 text-white hover:bg-red-700" : "border-gray-200 text-gray-600"}`}
+                      >
+                        <Youtube className="w-4 h-4 mr-2" /> YouTube URL
+                      </Button>
+                    </div>
+
+                    {curriculumItem?.videoType === "youtube" ? (
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Paste YouTube URL here (e.g. https://youtube.com/watch?v=...)"
+                          className="flex-1 border-gray-300"
+                          value={curriculumItem?.videoUrl || ""}
+                          onChange={(e) => {
+                            let cpy = [...courseCurriculumFormData];
+                            cpy[index] = { ...cpy[index], videoUrl: e.target.value, public_id: "youtube_video" }; // Set dummy public_id for validation
+                            setCourseCurriculumFormData(cpy);
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <>
+                        <label
+                          htmlFor={`video-upload-${index}`}
+                          className="flex items-center justify-center w-full px-4 py-3 text-blue-800 bg-blue-100 rounded-lg cursor-pointer hover:bg-blue-200 border border-blue-200 transition-colors"
+                        >
+                          <FileVideo className="w-5 h-5 mr-2" />
+                          Select Video File
+                        </label>
+                        <input
+                          id={`video-upload-${index}`}
+                          type="file"
+                          accept="video/*"
+                          onChange={(event) =>
+                            handleSingleLectureUpload(event, index)
+                          }
+                          className="hidden"
+                        />
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -319,7 +395,7 @@ function CourseCurriculum() {
           ))}
         </div>
       </CardContent>
-    </Card>
+    </Card >
   );
 }
 

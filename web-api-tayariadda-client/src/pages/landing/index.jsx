@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { BookOpen, Target, TrendingUp, Bell, ArrowRight, Star, CheckCircle } from "lucide-react";
+import { BookOpen, Target, TrendingUp, Bell, ArrowRight, Star, CheckCircle, GraduationCap } from "lucide-react";
 import { useContext, useEffect } from "react";
 import { AuthContext } from "@/context/auth-context";
 
@@ -97,20 +97,19 @@ function LandingPage() {
             <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-6 py-4">
                     <div className="flex items-center justify-between">
-                        <Link to="/" className="flex items-center gap-3">
+                        <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                             <img
                                 src="/tayari-adda-logo.png"
                                 alt="Tayari Adda"
-                                className="h-10 w-auto"
+                                className="h-16 w-auto"
                             />
-                            <span className="text-2xl font-semibold text-gray-900">Tayari Adda</span>
                         </Link>
 
                         <nav className="hidden md:flex items-center gap-8">
-                            <Link to="/" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">Home</Link>
-                            <Link to="/courses" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">Courses</Link>
-                            <Link to="/quiz" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">MCQ</Link>
-                            <Link to="/about" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">Learning</Link>
+                            <Link to="/auth" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">Home</Link>
+                            <Link to="/auth" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">Courses</Link>
+                            <Link to="/auth" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">MCQ</Link>
+                            <Link to="/auth" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">Learning</Link>
                         </nav>
 
                         <div className="flex items-center gap-3">

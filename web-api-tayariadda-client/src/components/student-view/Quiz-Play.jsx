@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axiosInstance from "@/api/axiosInstance";
+import { fetchStudentQuizByIdService } from "@/services";
 import {
   Dialog,
   DialogContent,
@@ -118,16 +119,18 @@ const QuizPlay = () => {
     }
 
     // Fetch from backend for real quizzes
-    axiosInstance
-      .get(`/instructor/question/${quizSetId}`)
-      .then((response) => {
-        if (response.data.success) {
-          setQuestions(response.data.data);
-        }
-      })
-      .catch((error) => {
-        console.error("Error fetching questions:", error);
-      });
+    // Fetch from backend for real quizzes
+    if (quizSetId) {
+      fetchStudentQuizByIdService(quizSetId)
+        .then((response) => {
+          if (response.success && response.data) {
+            setQuestions(response.data.questions || []);
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching questions:", error);
+        });
+    }
   }, [quizSetId]);
 
   // Timer logic
