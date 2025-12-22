@@ -384,7 +384,7 @@ const verifyPayment = async (req, res) => {
     }
 
     // Respond to the frontend
-    res.status(200).json({ message: "Payment verified and course added successfully" });
+    res.status(200).json({ success: true, message: "Payment verified and course added successfully" });
   } catch (error) {
     console.error("Error saving order, updating student courses, or updating course students:", error);
     res.status(500).json({ message: "Error processing payment and updating records" }); // Handle errors properly
