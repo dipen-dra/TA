@@ -1,7 +1,6 @@
 
-
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from "@/api/axiosInstance";
 
 const PaymentReturnPage = () => {
   const [paymentStatus, setPaymentStatus] = useState(null);
@@ -12,12 +11,6 @@ const PaymentReturnPage = () => {
     const params = new URLSearchParams(window.location.search);
     const pidx = params.get("pidx");
     const status = params.get("status");
-    const transactionId = params.get("transaction_id");
-    const amount = params.get("amount");
-    const mobile = params.get("mobile");
-    const purchaseOrderId = params.get("purchase_order_id");
-    const purchaseOrderName = params.get("purchase_order_name");
-    const totalAmount = params.get("total_amount");
 
     console.log("Payment callback parameters:", params);
 
@@ -25,35 +18,38 @@ const PaymentReturnPage = () => {
     setError(null);
 
     if (status === "Completed") {
-      setPaymentStatus("Payment was successful");
-      verifyPayment(transactionId); // Add verification logic here
-      window.location.href = "/student-courses";
+      setPaymentStatus("Payment was successful. Verifying...");
+      verifyPayment(pidx);
     } else if (status === "User canceled") {
       setPaymentStatus("Payment was canceled by the user");
       setLoading(false);
     } else if (status === "Pending") {
-      performLookup(pidx);
+      setPaymentStatus("Payment is pending...");
+      setLoading(false);
     } else {
       setPaymentStatus("Unknown payment status");
       setLoading(false);
     }
   }, []);
 
-  const verifyPayment = async (transactionId) => {
+  const verifyPayment = async (pidx) => {
     try {
-      const response = await axios.post(
-        "http://localhost:5000/student/order/verify-payment",
+      const response = await axiosInstance.post(
+        "/student/order/verify-payment",
         {
-          transactionId, // Send the transactionId to the backend
+          pidx: pidx,
         }
       );
 
-      if (response.status === 200) {
-        setPaymentStatus("Payment verified successfully");
+      if (response.data.success) {
+        setPaymentStatus("Payment verified successfully! Redirecting to your courses...");
+        setTimeout(() => {
+          window.location.href = "/student/student-courses";
+        }, 2000);
       } else {
-        setPaymentStatus("Payment verification failed");
+        setPaymentStatus("Payment verification failed. Please contact support.");
+        setLoading(false);
       }
-      setLoading(false);
     } catch (error) {
       console.error("Error during payment verification:", error);
       setError(
@@ -64,53 +60,27 @@ const PaymentReturnPage = () => {
     }
   };
 
-  const performLookup = async (pidx) => {
-    try {
-      const response = await axios.post(
-        "https://khalti.com/api/epayment/lookup/",
-        {
-          pidx: pidx,
-        },
-        {
-          headers: {
-            Authorization: "Bearer 41786720168241bb94f45448c2b5f4fb", // Using env variable
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const lookupData = response.data;
-      if (lookupData.status === "Completed") {
-        setPaymentStatus("Payment was successfully completed after lookup");
-      } else if (lookupData.status === "Pending") {
-        setPaymentStatus("Payment is still pending");
-      } else if (lookupData.status === "Refunded") {
-        setPaymentStatus("Payment was refunded");
-      } else if (lookupData.status === "User canceled") {
-        setPaymentStatus("Payment was canceled by user");
-      } else {
-        setPaymentStatus("Unknown payment status");
-      }
-    } catch (error) {
-      console.error("Error during lookup:", error);
-      setError(
-        error.response?.data?.message ||
-        "An error occurred while checking payment status"
-      );
-      setLoading(false);
-    }
-  };
-
   return (
-    <div>
-      <h1>Payment Status</h1>
-      {loading ? (
-        <p>Loading...</p>
-      ) : error ? (
-        <p>{error}</p>
-      ) : (
-        <p>{paymentStatus}</p>
-      )}
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">
+      <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center">
+        <h1 className="text-2xl font-bold mb-4 text-gray-800">Payment Status</h1>
+
+        {loading ? (
+          <div className="flex flex-col items-center">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
+            <p className="text-gray-600">Processing payment details...</p>
+          </div>
+        ) : error ? (
+          <div className="text-red-600 bg-red-50 p-4 rounded-xl">
+            <p className="font-semibold">Verification Failed</p>
+            <p className="text-sm mt-1">{error}</p>
+          </div>
+        ) : (
+          <div className="text-green-600 bg-green-50 p-4 rounded-xl">
+            <p className="font-semibold">{paymentStatus}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { AuthContext } from "@/context/auth-context";
-import axios from "axios";
+import axiosInstance from "@/api/axiosInstance";
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -52,7 +52,7 @@ const QuizList = () => {
     const fetchData = async () => {
       try {
         // Fetch Quizzes
-        const quizResponse = await axios.get("http://localhost:5000/instructor/quiz");
+        const quizResponse = await axiosInstance.get("/instructor/quiz");
         let quizzes = [];
         if (quizResponse.data.success && quizResponse.data.data.length > 0) {
           quizzes = quizResponse.data.data;
@@ -72,7 +72,7 @@ const QuizList = () => {
         // Fetch User Results if logged in
         if (auth?.user?._id) {
           try {
-            const resultsResponse = await axios.get(`http://localhost:5000/student/quiz/results/${auth.user._id}`);
+            const resultsResponse = await axiosInstance.get(`/student/quiz/results/${auth.user._id}`);
             if (resultsResponse.data.success) {
               // Convert array to map for easier lookup: { quizId: resultObject }
               const resultsMap = {};
@@ -218,9 +218,8 @@ const QuizList = () => {
                         <div className="flex items-center gap-3">
                           <span className="flex items-center gap-1">
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            15 Qs
+                            {quiz.questions ? quiz.questions.length : 15} Qs
                           </span>
                           <span className="flex items-center gap-1">
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

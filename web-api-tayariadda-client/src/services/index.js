@@ -21,6 +21,25 @@ export async function checkAuthService() {
   return data;
 }
 
+export async function forgotPasswordService(email) {
+  const { data } = await axiosInstance.post("/auth/forgot-password", { email });
+  return data;
+}
+
+export async function verifyOtpService(email, otp) {
+  const { data } = await axiosInstance.post("/auth/verify-otp", { email, otp });
+  return data;
+}
+
+export async function resetPasswordService(email, otp, newPassword) {
+  const { data } = await axiosInstance.post("/auth/reset-password", {
+    email,
+    otp,
+    newPassword,
+  });
+  return data;
+}
+
 export async function mediaUploadService(formData, onProgressCallback) {
   const { data } = await axiosInstance.post("/media/upload", formData, {
     onUploadProgress: (progressEvent) => {
@@ -173,6 +192,18 @@ export async function updateUserProfileService(formData) {
 
 export async function fetchStudentQuizResultsService(userId) {
   const { data } = await axiosInstance.get(`/student/quiz/results/${userId}`);
+
+  return data;
+}
+
+export async function fetchStudentWeeklyActivityService(userId) {
+  const { data } = await axiosInstance.get(`/student/course/activity/${userId}`);
+
+  return data;
+}
+
+export async function fetchStudentStatsService(userId) {
+  const { data } = await axiosInstance.get(`/student/course/stats/${userId}`);
 
   return data;
 }

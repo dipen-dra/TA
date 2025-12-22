@@ -27,6 +27,7 @@ function App() {
     <Routes>
       {/* Landing Page - Default for non-authenticated users */}
       <Route path="/" element={<LandingPage />} />
+      <Route path="/payment-return" element={<PaymentReturnPage />} />
 
       <Route
         path="/auth"

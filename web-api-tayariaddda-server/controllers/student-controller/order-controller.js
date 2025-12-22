@@ -26,6 +26,15 @@ const createOrder = async (req, res) => {
       coursePricing,
     } = req.body;
 
+    // Check purchase duplicacy
+    const isStudentAlreadyBoughtCourse = await StudentCourses.findOne({ userId });
+    if (isStudentAlreadyBoughtCourse) {
+      const isCourseAlreadyBought = isStudentAlreadyBoughtCourse.courses.find(item => item.courseId === courseId);
+      if (isCourseAlreadyBought) {
+        return res.status(400).json({ success: false, message: "You already purchased this course!" });
+      }
+    }
+
     const create_payment_json = {
       intent: "sale",
       payer: {
@@ -112,85 +121,85 @@ const createOrder = async (req, res) => {
 
 
 const capturePaymentAndFinalizeOrder = async (req, res) => {
-    try {
-      const { paymentId, payerId, orderId } = req.body;
-  
-      let order = await Order.findById(orderId);
-  
-      if (!order) {
-        return res.status(404).json({
-          success: false,
-          message: "Order can not be found",
-        });
-      }
-  
-      order.paymentStatus = "paid";
-      order.orderStatus = "confirmed";
-      order.paymentId = paymentId;
-      order.payerId = payerId;
-  
-      await order.save();
-  
-      //update out student course model
-      const studentCourses = await StudentCourses.findOne({
-        userId: order.userId,
-      });
-  
-      if (studentCourses) {
-        studentCourses.courses.push({
-          courseId: order.courseId,
-          title: order.courseTitle,
-          instructorId: order.instructorId,
-          instructorName: order.instructorName,
-          dateOfPurchase: order.orderDate,
-          courseImage: order.courseImage,
-        });
-  
-        await studentCourses.save();
-      } else {
-        const newStudentCourses = new StudentCourses({
-          userId: order.userId,
-          courses: [
-            {
-              courseId: order.courseId,
-              title: order.courseTitle,
-              instructorId: order.instructorId,
-              instructorName: order.instructorName,
-              dateOfPurchase: order.orderDate,
-              courseImage: order.courseImage,
-            },
-          ],
-        });
-  
-        await newStudentCourses.save();
-      }
-  
-      //update the course schema students
-      await Course.findByIdAndUpdate(order.courseId, {
-        $addToSet: {
-          students: {
-            studentId: order.userId,
-            studentName: order.fName,
-            studentEmail: order.email,
-            paidAmount: order.coursePricing,
-          },
-        },
-      });
-  
-      res.status(200).json({
-        success: true,
-        message: "Order confirmed",
-        data: order,
-      });
-    } catch (err) {
-      console.log(err);
-      res.status(500).json({
+  try {
+    const { paymentId, payerId, orderId } = req.body;
+
+    let order = await Order.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({
         success: false,
-        message: "Some error occured!",
+        message: "Order can not be found",
       });
     }
-  };
-  
+
+    order.paymentStatus = "paid";
+    order.orderStatus = "confirmed";
+    order.paymentId = paymentId;
+    order.payerId = payerId;
+
+    await order.save();
+
+    //update out student course model
+    const studentCourses = await StudentCourses.findOne({
+      userId: order.userId,
+    });
+
+    if (studentCourses) {
+      studentCourses.courses.push({
+        courseId: order.courseId,
+        title: order.courseTitle,
+        instructorId: order.instructorId,
+        instructorName: order.instructorName,
+        dateOfPurchase: order.orderDate,
+        courseImage: order.courseImage,
+      });
+
+      await studentCourses.save();
+    } else {
+      const newStudentCourses = new StudentCourses({
+        userId: order.userId,
+        courses: [
+          {
+            courseId: order.courseId,
+            title: order.courseTitle,
+            instructorId: order.instructorId,
+            instructorName: order.instructorName,
+            dateOfPurchase: order.orderDate,
+            courseImage: order.courseImage,
+          },
+        ],
+      });
+
+      await newStudentCourses.save();
+    }
+
+    //update the course schema students
+    await Course.findByIdAndUpdate(order.courseId, {
+      $addToSet: {
+        students: {
+          studentId: order.userId,
+          studentName: order.fName,
+          studentEmail: order.email,
+          paidAmount: order.coursePricing,
+        },
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Order confirmed",
+      data: order,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      message: "Some error occured!",
+    });
+  }
+};
+
 
 // ================================khalti==================================
 
@@ -219,6 +228,15 @@ const createKhaltiOrder = async (req, res) => {
       coursePricing,
     } = req.body;
 
+    // Check purchase duplicacy
+    const isStudentAlreadyBoughtCourse = await StudentCourses.findOne({ userId });
+    if (isStudentAlreadyBoughtCourse) {
+      const isCourseAlreadyBought = isStudentAlreadyBoughtCourse.courses.find(item => item.courseId === courseId);
+      if (isCourseAlreadyBought) {
+        return res.status(400).json({ success: false, message: "You already purchased this course!" });
+      }
+    }
+
     const coursePricin = coursePricing * 100; // Number value
     const coursePricingStr = String(coursePricin);
 
@@ -239,7 +257,7 @@ const createKhaltiOrder = async (req, res) => {
       },
       {
         headers: {
-          'Authorization': 'key 41786720168241bb94f45448c2b5f4fb',
+          'Authorization': 'key 9c06141d6a04414f88aebf71f53b3095',
           'Content-Type': 'application/json',
         },
       }
@@ -413,7 +431,7 @@ const initiateKhaltiPayment = async (req, res) => {
       khaltiPayload,
       {
         headers: {
-          Authorization: "key 41786720168241bb94f45448c2b5f4fb",
+          Authorization: "key 9c06141d6a04414f88aebf71f53b3095",
           "Content-Type": "application/json",
         },
       }
@@ -440,4 +458,4 @@ const initiateKhaltiPayment = async (req, res) => {
   }
 };
 
-module.exports = { createOrder, capturePaymentAndFinalizeOrder, createKhaltiOrder, verifyPayment,initiateKhaltiPayment };
+module.exports = { createOrder, capturePaymentAndFinalizeOrder, createKhaltiOrder, verifyPayment, initiateKhaltiPayment };

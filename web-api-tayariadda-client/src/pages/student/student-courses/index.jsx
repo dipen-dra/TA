@@ -55,10 +55,7 @@ function StudentCoursesPage() {
     try {
       const response = await fetchStudentBoughtCoursesService(auth?.user?._id);
       if (response?.success && response?.data?.length > 0) {
-        setStudentBoughtCoursesList(response?.data.map(course => ({
-          ...course,
-          progress: course.progress || Math.floor(Math.random() * 100) // Mock progress if missing
-        })));
+        setStudentBoughtCoursesList(response?.data);
       } else {
         // Use seed data if no courses found
         setStudentBoughtCoursesList(seedCourses);

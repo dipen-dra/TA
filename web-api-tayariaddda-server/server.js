@@ -16,7 +16,7 @@ const studentCourseProgressRoutes = require("./routes/student-routes/course-prog
 const studentQuizRoutes = require("./routes/student-routes/student-quiz-routes");
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/tayariadda-server";
 
 // ✅ Asynchronous function to connect to MongoDB

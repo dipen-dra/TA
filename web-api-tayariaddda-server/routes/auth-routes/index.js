@@ -3,7 +3,10 @@ const {
   registerUser,
   loginUser,
   verifyEmail,
-  updateUserDetails
+  updateUserDetails,
+  forgotPassword,
+  verifyOtp,
+  resetPassword
 } = require("../../controllers/auth-controller/index");
 const authenticateMiddleware = require("../../middleware/auth-middleware");
 const User = require("../../models/User"); // Import User model
@@ -12,6 +15,9 @@ const router = express.Router();
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.get("/verify-email", verifyEmail);
+router.post("/forgot-password", forgotPassword);
+router.post("/verify-otp", verifyOtp);
+router.post("/reset-password", resetPassword);
 router.put("/update", authenticateMiddleware, updateUserDetails);
 router.get("/check-auth", authenticateMiddleware, async (req, res) => {
   try {

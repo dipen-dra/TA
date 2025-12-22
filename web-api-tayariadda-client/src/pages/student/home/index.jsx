@@ -1,14 +1,34 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { StudentContext } from "@/context/student-context";
-import { checkCoursePurchaseInfoService, fetchStudentBoughtCoursesService, fetchStudentViewCourseListService } from "@/services";
+import {
+  checkCoursePurchaseInfoService,
+  fetchStudentBoughtCoursesService,
+  fetchStudentViewCourseListService,
+  fetchStudentWeeklyActivityService,
+  fetchStudentStatsService
+} from "@/services";
 import { AuthContext } from "@/context/auth-context";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { PlayCircle, Clock, Award, TrendingUp, BookOpen, ArrowRight, Calendar, Zap, Trophy, Target } from "lucide-react";
+import { PlayCircle, Clock, Award, TrendingUp, BookOpen, ArrowRight, Calendar, Zap, Trophy, Target, Star } from "lucide-react";
+
+// Icon mapping for dynamic backend response
+const iconMap = {
+  Zap: Zap,
+  Trophy: Trophy,
+  Target: Target,
+  Star: Star,
+  Award: Award
+};
 
 function StudentHomePage() {
   const { studentViewCoursesList, setStudentViewCoursesList, studentBoughtCoursesList, setStudentBoughtCoursesList } = useContext(StudentContext);
   const { auth } = useContext(AuthContext);
+  const [weeklyActivity, setWeeklyActivity] = useState([]);
+  const [studentStats, setStudentStats] = useState({
+    achievements: [],
+    upcomingExam: null
+  });
   const navigate = useNavigate();
 
   async function fetchAllStudentViewCourses() {
@@ -19,6 +39,16 @@ function StudentHomePage() {
   async function fetchStudentBoughtCourses() {
     const response = await fetchStudentBoughtCoursesService(auth?.user?._id);
     if (response?.success) setStudentBoughtCoursesList(response?.data);
+  }
+
+  async function fetchWeeklyActivity() {
+    const response = await fetchStudentWeeklyActivityService(auth?.user?._id);
+    if (response?.success) setWeeklyActivity(response?.data);
+  }
+
+  async function fetchStats() {
+    const response = await fetchStudentStatsService(auth?.user?._id);
+    if (response?.success) setStudentStats(response?.data);
   }
 
   async function handleCourseNavigate(getCurrentCourseId) {
@@ -39,6 +69,8 @@ function StudentHomePage() {
   useEffect(() => {
     fetchAllStudentViewCourses();
     fetchStudentBoughtCourses();
+    fetchWeeklyActivity();
+    fetchStats();
   }, []);
 
   // --- Derived Data & Mock Data ---
@@ -47,28 +79,24 @@ function StudentHomePage() {
   const heroCourse = lastActiveCourse || featuredCourse;
   const isContinueLearning = !!lastActiveCourse;
 
-  const activityData = [
-    { day: "Mon", hours: 2.5 },
-    { day: "Tue", hours: 4.0 },
-    { day: "Wed", hours: 1.5 },
-    { day: "Thu", hours: 3.5 },
-    { day: "Fri", hours: 5.0 },
-    { day: "Sat", hours: 6.5 },
-    { day: "Sun", hours: 3.0 },
+  const activityData = weeklyActivity.length > 0 ? weeklyActivity : [
+    { day: "Mon", hours: 0 },
+    { day: "Tue", hours: 0 },
+    { day: "Wed", hours: 0 },
+    { day: "Thu", hours: 0 },
+    { day: "Fri", hours: 0 },
+    { day: "Sat", hours: 0 },
+    { day: "Sun", hours: 0 },
   ];
   const maxHours = Math.max(...activityData.map(d => d.hours));
 
-  const upcomingExam = {
-    title: "Loksewa Officer Exam",
-    date: "2025-01-15",
-    daysLeft: 24
+  const upcomingExam = studentStats.upcomingExam || {
+    title: "No Upcoming Exam",
+    date: "",
+    daysLeft: 0
   };
 
-  const achievements = [
-    { title: "7 Day Streak", icon: Zap, color: "text-yellow-500", bg: "bg-yellow-50" },
-    { title: "Quiz Master", icon: Trophy, color: "text-purple-500", bg: "bg-purple-50" },
-    { title: "Fast Learner", icon: Target, color: "text-blue-500", bg: "bg-blue-50" },
-  ];
+  const achievements = studentStats.achievements || [];
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -127,12 +155,12 @@ function StudentHomePage() {
                       <div className="space-y-2">
                         <div className="flex justify-between text-xs font-medium text-blue-100">
                           <span>Progress</span>
-                          <span>{heroCourse?.progress || 45}%</span>
+                          <span>{heroCourse?.progress !== undefined ? Math.round(heroCourse?.progress) : 0}%</span>
                         </div>
                         <div className="w-full bg-blue-900/30 h-2 rounded-full overflow-hidden">
                           <div
                             className="bg-blue-300 h-full rounded-full shadow-[0_0_15px_rgba(147,197,253,0.6)]"
-                            style={{ width: `${heroCourse?.progress || 45}%` }}
+                            style={{ width: `${heroCourse?.progress || 0}%` }}
                           ></div>
                         </div>
                       </div>
@@ -296,17 +324,20 @@ function StudentHomePage() {
                 </h3>
               </div>
               <div className="space-y-4">
-                {achievements.map((item, index) => (
-                  <div key={index} className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
-                    <div className={`w-12 h-12 rounded-full ${item.bg} flex items-center justify-center ${item.color}`}>
-                      <item.icon className="w-6 h-6" />
+                {achievements.map((item, index) => {
+                  const IconComponent = iconMap[item.icon] || Award; // Fallback icon
+                  return (
+                    <div key={index} className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+                      <div className={`w-12 h-12 rounded-full ${item.bg} flex items-center justify-center ${item.color}`}>
+                        <IconComponent className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900 text-sm">{item.title}</h4>
+                        <p className="text-xs text-gray-500">Earned recently</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-bold text-gray-900 text-sm">{item.title}</h4>
-                      <p className="text-xs text-gray-500">Earned 2 days ago</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
 
                 <Button variant="outline" className="w-full text-xs h-9 mt-2">
                   View All Badges

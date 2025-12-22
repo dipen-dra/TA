@@ -51,15 +51,14 @@ function AuthPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="px-6 py-4">
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-md">
+        <div className="px-6 py-3">
           <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity w-fit">
             <img
               src="/tayari-adda-logo.png"
               alt="Tayari Adda"
-              className="h-12 w-auto"
+              className="h-16 w-auto"
             />
-            <span className="text-2xl font-semibold text-gray-900">Tayari Adda</span>
           </Link>
         </div>
       </header>

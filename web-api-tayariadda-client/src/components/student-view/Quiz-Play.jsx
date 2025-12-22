@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "@/api/axiosInstance";
 import {
   Dialog,
   DialogContent,
@@ -118,8 +118,8 @@ const QuizPlay = () => {
     }
 
     // Fetch from backend for real quizzes
-    axios
-      .get(`http://localhost:5000/instructor/question/${quizSetId}`)
+    axiosInstance
+      .get(`/instructor/question/${quizSetId}`)
       .then((response) => {
         if (response.data.success) {
           setQuestions(response.data.data);
@@ -199,7 +199,7 @@ const QuizPlay = () => {
     // Save result to backend
     if (auth?.user?._id) {
       try {
-        await axios.post("http://localhost:5000/student/quiz/submit", {
+        await axiosInstance.post("/student/quiz/submit", {
           userId: auth.user._id,
           quizId: quizSetId,
           score: tempScore,

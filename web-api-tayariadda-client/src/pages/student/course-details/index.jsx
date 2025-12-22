@@ -15,11 +15,12 @@ import { StudentContext } from "@/context/student-context";
 import {
   createPaymentService,
   fetchStudentViewCourseDetailsService,
+  checkCoursePurchaseInfoService,
 } from "@/services";
 import { CheckCircle, Globe, Lock, PlayCircle, Users, Calendar, Award, Clock, Wallet } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "@/api/axiosInstance";
 
 import { courseAssetMap } from "@/config/course-assets";
 
@@ -39,6 +40,7 @@ function StudentViewCourseDetailsPage() {
     useState(null);
   const [showFreePreviewDialog, setShowFreePreviewDialog] = useState(false);
   const [approvalUrl, setApprovalUrl] = useState("");
+  const [isPurchased, setIsPurchased] = useState(false);
   const { id } = useParams();
   const location = useLocation();
 
@@ -55,6 +57,19 @@ function StudentViewCourseDetailsPage() {
       setLoadingState(false);
     }
   }
+
+  async function checkCoursePurchaseInfo() {
+    const response = await checkCoursePurchaseInfoService(currentCourseDetailsId, auth?.user?._id);
+    if (response?.success && response?.data) {
+      setIsPurchased(true); // Assuming data is boolean or truthy if purchased
+    } else {
+      setIsPurchased(false);
+    }
+  }
+
+  useEffect(() => {
+    if (currentCourseDetailsId && auth?.user?._id) checkCoursePurchaseInfo();
+  }, [currentCourseDetailsId, auth?.user?._id]);
 
   function handleSetFreePreview(getCurrentVideoInfo) {
     // Check if we have a custom video URL for the entire course
@@ -315,57 +330,69 @@ function StudentViewCourseDetailsPage() {
 
                   {/* Action Buttons */}
                   <div className="space-y-3">
-                    {/* Khalti */}
-                    <button
-                      onClick={async () => {
-                        const paymentPayload = {
-                          userId: auth?.user?._id,
-                          fName: auth?.user?.fName,
-                          email: auth?.user?.email,
-                          phone: "9800000001",
-                          orderStatus: "pending",
-                          paymentMethod: "khalti",
-                          paymentStatus: "initiated",
-                          orderDate: new Date().toISOString(),
-                          paymentId: "",
-                          payerId: "",
-                          instructorId: studentViewCourseDetails?.instructorId,
-                          instructorName: studentViewCourseDetails?.instructorName,
-                          courseImage: studentViewCourseDetails?.image,
-                          courseTitle: studentViewCourseDetails?.title,
-                          courseId: studentViewCourseDetails?._id,
-                          coursePricing: studentViewCourseDetails?.pricing,
-                        };
+                    {isPurchased ? (
+                      <Button
+                        onClick={() => navigate(`/student/course-progress/${currentCourseDetailsId}`)}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                      >
+                        <PlayCircle className="w-6 h-6" />
+                        Go to Course
+                      </Button>
+                    ) : (
+                      <>
+                        {/* Khalti */}
+                        <button
+                          onClick={async () => {
+                            const paymentPayload = {
+                              userId: auth?.user?._id,
+                              fName: auth?.user?.fName,
+                              email: auth?.user?.email,
+                              phone: "9800000001",
+                              orderStatus: "pending",
+                              paymentMethod: "khalti",
+                              paymentStatus: "initiated",
+                              orderDate: new Date().toISOString(),
+                              paymentId: "",
+                              payerId: "",
+                              instructorId: studentViewCourseDetails?.instructorId,
+                              instructorName: studentViewCourseDetails?.instructorName,
+                              courseImage: studentViewCourseDetails?.image,
+                              courseTitle: studentViewCourseDetails?.title,
+                              courseId: studentViewCourseDetails?._id,
+                              coursePricing: studentViewCourseDetails?.pricing,
+                            };
 
-                        try {
-                          const response = await axios.post(
-                            "http://localhost:5000/student/order/create-khalti",
-                            paymentPayload
-                          );
-                          if (response.data.success) {
-                            window.location.href = response.data.payment_url;
-                          } else {
-                            alert("Payment initiation failed.");
-                          }
-                        } catch (error) {
-                          console.error(error);
-                          alert("An error occurred while processing payment.");
-                        }
-                      }}
-                      className="w-full bg-[#5D2E8E] hover:bg-[#4a2472] text-white font-bold py-3.5 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group"
-                    >
-                      <Wallet className="w-6 h-6 text-white" />
-                      <span className="text-white font-bold text-lg">Pay with Khalti</span>
-                      <span className="sr-only">Khalti</span>
-                    </button>
+                            try {
+                              const response = await axiosInstance.post(
+                                "/student/order/create-khalti",
+                                paymentPayload
+                              );
+                              if (response.data.success) {
+                                window.location.href = response.data.payment_url;
+                              } else {
+                                alert("Payment initiation failed.");
+                              }
+                            } catch (error) {
+                              console.error(error);
+                              alert("An error occurred while processing payment.");
+                            }
+                          }}
+                          className="w-full bg-[#5D2E8E] hover:bg-[#4a2472] text-white font-bold py-3.5 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group"
+                        >
+                          <Wallet className="w-6 h-6 text-white" />
+                          <span className="text-white font-bold text-lg">Pay with Khalti</span>
+                          <span className="sr-only">Khalti</span>
+                        </button>
 
-                    {/* PayPal */}
-                    <button
-                      onClick={handleCreatePayment}
-                      className="w-full bg-[#003087] hover:bg-[#00256b] text-white font-bold py-3.5 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-                    >
-                      <span>Pay with PayPal</span>
-                    </button>
+                        {/* PayPal */}
+                        <button
+                          onClick={handleCreatePayment}
+                          className="w-full bg-[#003087] hover:bg-[#00256b] text-white font-bold py-3.5 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                        >
+                          <span>Pay with PayPal</span>
+                        </button>
+                      </>
+                    )}
 
                     <p className="text-xs text-center text-gray-500 mt-4">
                       30-Day Money-Back Guarantee
