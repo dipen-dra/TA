@@ -16,7 +16,9 @@ import {
   createPaymentService,
   fetchStudentViewCourseDetailsService,
   checkCoursePurchaseInfoService,
+  createEsewaPaymentService
 } from "@/services";
+import EsewaPaymentForm from "@/components/student-view/EsewaPaymentForm";
 import { CheckCircle, Globe, Lock, PlayCircle, Users, Calendar, Award, Clock, Wallet } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
@@ -41,6 +43,7 @@ function StudentViewCourseDetailsPage() {
     useState(null);
   const [showFreePreviewDialog, setShowFreePreviewDialog] = useState(false);
   const [approvalUrl, setApprovalUrl] = useState("");
+  const [esewaConfig, setEsewaConfig] = useState(null);
   const [isPurchased, setIsPurchased] = useState(false);
   const { id } = useParams();
   const location = useLocation();
@@ -80,7 +83,26 @@ function StudentViewCourseDetailsPage() {
     if (overrideVideoUrl) {
       setDisplayCurrentVideoFreePreview(overrideVideoUrl);
     } else {
-      setDisplayCurrentVideoFreePreview(getCurrentVideoInfo?.videoUrl);
+    }
+  }
+
+  async function handleEsewaPayment() {
+    const paymentPayload = {
+      userId: auth?.user?._id,
+      fName: auth?.user?.fName,
+      email: auth?.user?.email,
+      courseTitle: studentViewCourseDetails?.title,
+      courseId: studentViewCourseDetails?._id,
+      coursePricing: studentViewCourseDetails?.pricing,
+      courseImage: studentViewCourseDetails?.image,
+      instructorId: studentViewCourseDetails?.instructorId,
+      instructorName: studentViewCourseDetails?.instructorName,
+    };
+
+    const response = await createEsewaPaymentService(paymentPayload);
+
+    if (response?.success) {
+      setEsewaConfig(response?.data);
     }
   }
 
@@ -385,13 +407,19 @@ function StudentViewCourseDetailsPage() {
                           <span className="sr-only">Khalti</span>
                         </button>
 
-                        {/* PayPal */}
-                        <button
-                          onClick={handleCreatePayment}
-                          className="w-full bg-[#003087] hover:bg-[#00256b] text-white font-bold py-3.5 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-                        >
-                          <span>Pay with PayPal</span>
-                        </button>
+
+
+                        {/* eSewa */}
+                        <div className="w-full">
+                          <EsewaPaymentForm config={esewaConfig} />
+                          <button
+                            onClick={handleEsewaPayment}
+                            className="w-full bg-[#60bb46] hover:bg-[#54a33d] text-white font-bold py-3.5 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                          >
+                            <Wallet className="w-6 h-6 text-white" />
+                            <span>Pay with eSewa</span>
+                          </button>
+                        </div>
                       </>
                     )}
 
@@ -437,15 +465,16 @@ function StudentViewCourseDetailsPage() {
           </aside>
 
         </div>
-      </div>
+      </div >
 
       {/* Video Preview Dialog */}
-      <Dialog
+      < Dialog
         open={showFreePreviewDialog}
         onOpenChange={() => {
           setShowFreePreviewDialog(false);
           setDisplayCurrentVideoFreePreview(null);
-        }}
+        }
+        }
       >
         <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black border-gray-800">
           <DialogHeader className="sr-only">
@@ -484,8 +513,8 @@ function StudentViewCourseDetailsPage() {
             </div>
           </div>
         </DialogContent>
-      </Dialog>
-    </div>
+      </Dialog >
+    </div >
   );
 }
 

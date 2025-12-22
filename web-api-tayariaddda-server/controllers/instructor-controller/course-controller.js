@@ -153,6 +153,9 @@ const getInstructorDashboardAnalytics = async (req, res) => {
   try {
     const instructorId = req.params.instructorId;
 
+    // 0. Total Courses
+    const totalCourses = await Course.countDocuments({ instructorId });
+
     // 1. Total Stats (All time)
     const totalStats = await Order.aggregate([
       { $match: { paymentStatus: "paid" } },
@@ -231,6 +234,25 @@ const getInstructorDashboardAnalytics = async (req, res) => {
 
     const revenueGrowth = lastRevenue === 0 ? 100 : ((curRevenue - lastRevenue) / lastRevenue) * 100;
     const studentGrowth = lastStudents === 0 ? 100 : ((curStudents - lastStudents) / lastStudents) * 100;
+
+    // Course Growth Calculation
+    const currentMonthCourses = await Course.countDocuments({
+      instructorId,
+      date: {
+        $gte: new Date(currentYear, currentMonth - 1, 1),
+        $lt: new Date(currentYear, currentMonth, 1)
+      }
+    });
+
+    const lastMonthCourses = await Course.countDocuments({
+      instructorId,
+      date: {
+        $gte: new Date(lastMonthYear, lastMonth - 1, 1),
+        $lt: new Date(lastMonthYear, lastMonth, 1)
+      }
+    });
+
+    const courseGrowth = lastMonthCourses === 0 ? (currentMonthCourses > 0 ? 100 : 0) : ((currentMonthCourses - lastMonthCourses) / lastMonthCourses) * 100;
 
 
     // 3. Monthly Revenue Aggregation (Historical for Chart)
@@ -349,8 +371,10 @@ const getInstructorDashboardAnalytics = async (req, res) => {
       data: {
         totalRevenue: totalStats[0]?.totalRevenue || 0,
         totalStudents: totalStats[0]?.totalStudents || 0, // Now uses unique count
+        totalCourses, // Added totalCourses
         revenueGrowth: Math.round(revenueGrowth),
         studentGrowth: Math.round(studentGrowth),
+        courseGrowth: Math.round(courseGrowth),
         monthlyRevenue: formattedMonthlyRevenue,
         studentList,
         courseDistribution: courseDistributionStats

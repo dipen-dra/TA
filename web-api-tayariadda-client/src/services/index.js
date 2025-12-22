@@ -137,6 +137,11 @@ export async function createPaymentService(formData) {
   return data;
 }
 
+export async function createEsewaPaymentService(formData) {
+  const { data } = await axiosInstance.post(`/student/order/create-esewa`, formData);
+  return data;
+}
+
 export async function captureAndFinalizePaymentService(
   paymentId,
   payerId,

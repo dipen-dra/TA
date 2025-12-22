@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DollarSign, Users, TrendingUp } from "lucide-react";
+import { DollarSign, Users, TrendingUp, BookOpen } from "lucide-react";
 import {
   AreaChart,
   Area,
@@ -33,7 +33,9 @@ function InstructorDashboard() {
     monthlyRevenue: [],
     courseDistribution: [],
     studentGrowth: 0,
-    revenueGrowth: 0
+    revenueGrowth: 0,
+    totalCourses: 0,
+    courseGrowth: 0
   });
 
   useEffect(() => {
@@ -48,7 +50,7 @@ function InstructorDashboard() {
     fetchDashboardAnalytics();
   }, [auth?.user?._id]);
 
-  const { totalRevenue, totalStudents, studentList, monthlyRevenue, courseDistribution, revenueGrowth, studentGrowth } = dashboardData;
+  const { totalRevenue, totalStudents, studentList, monthlyRevenue, courseDistribution, revenueGrowth, studentGrowth, totalCourses, courseGrowth } = dashboardData;
 
   const config = [
     {
@@ -68,12 +70,12 @@ function InstructorDashboard() {
       trend: revenueGrowth || 0
     },
     {
-      icon: TrendingUp,
-      label: "Avg. Course Rating",
-      value: "4.8", // Keep as placeholder or implement rating logic later
+      icon: BookOpen,
+      label: "Total Courses",
+      value: totalCourses,
       color: "text-purple-600",
       bg: "bg-purple-50",
-      trend: 0 // No rating trend logic yet
+      trend: courseGrowth || 0
     }
   ];
 

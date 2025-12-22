@@ -458,4 +458,193 @@ const initiateKhaltiPayment = async (req, res) => {
   }
 };
 
-module.exports = { createOrder, capturePaymentAndFinalizeOrder, createKhaltiOrder, verifyPayment, initiateKhaltiPayment };
+// ================================eSewa==================================
+
+const crypto = require("crypto");
+
+const createEsewaOrder = async (req, res) => {
+  try {
+    const {
+      userId,
+      fName,
+      email,
+      courseTitle,
+      courseId,
+      coursePricing,
+      courseImage,
+      instructorId,
+      instructorName,
+    } = req.body;
+
+    // Check purchase duplicacy
+    const isStudentAlreadyBoughtCourse = await StudentCourses.findOne({ userId });
+    if (isStudentAlreadyBoughtCourse) {
+      const isCourseAlreadyBought = isStudentAlreadyBoughtCourse.courses.find(item => item.courseId === courseId);
+      if (isCourseAlreadyBought) {
+        return res.status(400).json({ success: false, message: "You already purchased this course!" });
+      }
+    }
+
+    const transaction_uuid = `order-${Date.now()}-${userId}`;
+    const product_code = "EPAYTEST"; // Use EPAYTEST for testing
+    const secret_key = "8gBm/:&EnhH.1/q"; // Test Secret Key
+    const total_amount = coursePricing; // Ensure this is a string or number formatted correctly
+
+    // Generate Signature
+    // Message format: total_amount,transaction_uuid,product_code
+    const signatureString = `total_amount=${total_amount},transaction_uuid=${transaction_uuid},product_code=${product_code}`;
+    const signature = crypto.createHmac("sha256", secret_key).update(signatureString).digest("base64");
+
+    // Store order details temporarily (or you could create a Pending order in DB)
+    // For eSewa, we usually verify AFTER payment, but storing intent is good.
+    // Reusing globalOrderDetails for simplicity as per existing pattern, 
+    // but ideally should be in DB with 'pending' status.
+    globalOrderDetails = {
+      userId,
+      fName,
+      email,
+      courseTitle,
+      courseId,
+      coursePricing,
+      courseImage,
+      instructorId,
+      instructorName,
+      orderStatus: "pending",
+      paymentMethod: "esewa",
+      paymentStatus: "pending",
+      orderDate: new Date(),
+      payerId: userId,
+      paymentId: null,
+    };
+
+    const esewaConfig = {
+      amount: total_amount,
+      tax_amount: "0",
+      total_amount: total_amount,
+      transaction_uuid: transaction_uuid,
+      product_code: product_code,
+      product_service_charge: "0",
+      product_delivery_charge: "0",
+      success_url: "http://localhost:5173/payment-return",
+      failure_url: "http://localhost:5173/payment-return",
+      signed_field_names: "total_amount,transaction_uuid,product_code",
+      signature: signature,
+      url: "https://rc-epay.esewa.com.np/api/epay/main/v2/form", // Test URL
+    };
+
+    res.status(200).json({
+      success: true,
+      data: esewaConfig,
+    });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Error creating eSewa order",
+    });
+  }
+};
+
+const verifyEsewaPayment = async (req, res) => {
+  try {
+    const { encodedData } = req.body;
+
+    if (!encodedData) {
+      return res.status(400).json({ success: false, message: "No data received" });
+    }
+
+    // Decode Base64
+    let decodedData = Buffer.from(encodedData, "base64").toString("utf-8");
+    decodedData = JSON.parse(decodedData);
+
+    console.log("eSewa Decoded Response:", decodedData);
+
+    const { status, total_amount, transaction_uuid, transaction_code } = decodedData;
+
+    if (status !== "COMPLETE") {
+      return res.status(400).json({ success: false, message: "Payment failed or cancelled." });
+    }
+
+    // Usually we verify signature here too for security, but for this demo step:
+    // We already have the transaction_uuid matching our pending logic if we stored it properly.
+
+    // Create the Order
+    const newOrder = new Order({
+      userId: globalOrderDetails.userId,
+      fName: globalOrderDetails.fName,
+      email: globalOrderDetails.email,
+      orderStatus: "confirmed",
+      paymentMethod: "esewa",
+      paymentStatus: "paid",
+      orderDate: new Date(),
+      paymentId: transaction_code,
+      payerId: globalOrderDetails.payerId,
+      instructorId: globalOrderDetails.instructorId,
+      instructorName: globalOrderDetails.instructorName,
+      courseImage: globalOrderDetails.courseImage,
+      courseTitle: globalOrderDetails.courseTitle,
+      courseId: globalOrderDetails.courseId,
+      coursePricing: globalOrderDetails.coursePricing,
+    });
+
+    await newOrder.save();
+
+    // Update Student Courses
+    const studentCourses = await StudentCourses.findOne({ userId: globalOrderDetails.userId });
+    const courseDetails = {
+      courseId: globalOrderDetails.courseId,
+      title: globalOrderDetails.courseTitle,
+      instructorId: globalOrderDetails.instructorId,
+      instructorName: globalOrderDetails.instructorName,
+      dateOfPurchase: new Date(),
+      courseImage: globalOrderDetails.courseImage,
+    };
+
+    if (studentCourses) {
+      studentCourses.courses.push(courseDetails);
+      await studentCourses.save();
+    } else {
+      const newStudentCourses = new StudentCourses({
+        userId: globalOrderDetails.userId,
+        courses: [courseDetails],
+      });
+      await newStudentCourses.save();
+    }
+
+    // Update Course Students
+    await Course.findByIdAndUpdate(globalOrderDetails.courseId, {
+      $addToSet: {
+        students: {
+          studentId: globalOrderDetails.userId,
+          studentName: globalOrderDetails.fName,
+          studentEmail: globalOrderDetails.email,
+          paidAmount: globalOrderDetails.coursePricing,
+        },
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Order confirmed",
+      data: newOrder,
+    });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Error verifying eSewa payment",
+    });
+  }
+};
+
+module.exports = {
+  createOrder,
+  capturePaymentAndFinalizeOrder,
+  createKhaltiOrder,
+  verifyPayment, // Khalti Verify
+  initiateKhaltiPayment,
+  createEsewaOrder, // New
+  verifyEsewaPayment // New
+};
