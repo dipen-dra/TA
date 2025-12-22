@@ -134,13 +134,13 @@ function StudentCoursesPage() {
                       <div className="w-full mb-4">
                         <div className="flex justify-between text-xs font-bold text-gray-600 mb-2 uppercase tracking-wider">
                           <span className="flex items-center gap-1"><BarChart className="w-3 h-3" /> Progress</span>
-                          <span className={course.progress >= 100 ? "text-green-600" : "text-blue-600"}>{course.progress || 0}%</span>
+                          <span className={course.progress >= 100 ? "text-green-600" : "text-blue-600"}>{Math.round(course.progress || 0)}%</span>
                         </div>
                         <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
                           <div
                             className={`h-full rounded-full transition-all duration-1000 ease-out ${course.progress >= 100 ? "bg-green-500" : "bg-blue-600"
                               }`}
-                            style={{ width: `${course.progress || 0}%` }}
+                            style={{ width: `${Math.round(course.progress || 0)}%` }}
                           ></div>
                         </div>
                       </div>

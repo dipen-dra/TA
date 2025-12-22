@@ -19,7 +19,7 @@ import {
 } from "@/services";
 import { CheckCircle, Globe, Lock, PlayCircle, Users, Calendar, Award, Clock, Wallet } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
 import axiosInstance from "@/api/axiosInstance";
 
 import { courseAssetMap } from "@/config/course-assets";
@@ -35,6 +35,7 @@ function StudentViewCourseDetailsPage() {
   } = useContext(StudentContext);
 
   const { auth } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const [displayCurrentVideoFreePreview, setDisplayCurrentVideoFreePreview] =
     useState(null);

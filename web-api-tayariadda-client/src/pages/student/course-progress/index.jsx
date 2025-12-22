@@ -21,6 +21,7 @@ import { Check, ChevronLeft, ChevronRight, Play, RotateCcw, Menu, X } from "luci
 import { useContext, useEffect, useState } from "react";
 import Confetti from "react-confetti";
 import { useNavigate, useParams } from "react-router-dom";
+import { courseAssetMap } from "@/config/course-assets";
 
 function StudentViewCourseProgressPage() {
   const navigate = useNavigate();
@@ -122,6 +123,10 @@ function StudentViewCourseProgressPage() {
   const completedLectures = studentCurrentCourseProgress?.progress?.filter(p => p.viewed).length || 0;
   const progressPercentage = totalLectures === 0 ? 0 : Math.round((completedLectures / totalLectures) * 100);
 
+  // Helper to get valid video URL (ignoring sample/placeholder videos)
+  const currentVideoUrl = currentLecture?.videoUrl?.includes("sample-videos.com")
+    ? courseAssetMap[studentCurrentCourseProgress?.courseDetails?.title]?.videoUrl
+    : (currentLecture?.videoUrl || courseAssetMap[studentCurrentCourseProgress?.courseDetails?.title]?.videoUrl);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 font-sans">
@@ -161,11 +166,11 @@ function StudentViewCourseProgressPage() {
           <ScrollArea className="flex-1 w-full bg-gray-100">
             <div className="max-w-5xl mx-auto p-4 md:p-8">
               {/* Video Player Container */}
-              <div className="bg-black rounded-2xl overflow-hidden shadow-2xl aspect-video w-full mb-6">
+              <div className="bg-black rounded-2xl overflow-hidden shadow-2xl aspect-video w-full mb-6 relative">
                 <VideoPlayer
                   width="100%"
                   height="100%"
-                  url={currentLecture?.videoUrl}
+                  url={currentVideoUrl}
                   onProgressUpdate={setCurrentLecture}
                   progressData={currentLecture}
                 />
@@ -241,7 +246,7 @@ function StudentViewCourseProgressPage() {
                             }`}
                         >
                           <div className={`mt-0.5 rounded-full p-1 ${isViewed ? "bg-green-100 text-green-600" :
-                              isActive ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-400"
+                            isActive ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-400"
                             }`}>
                             {isViewed ? <Check className="w-3 h-3" /> : <Play className="w-3 h-3" />}
                           </div>

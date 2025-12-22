@@ -116,13 +116,17 @@ function VideoPlayer({
   }, []);
 
   useEffect(() => {
-    if (played === 1) {
+    if (played >= 0.99) { // Relaxed threshold for completion
       onProgressUpdate({
         ...progressData,
-        progressValue: played,
+        progressValue: 1,
       });
     }
   }, [played]);
+
+  useEffect(() => {
+    if (url) setPlaying(true);
+  }, [url]);
 
   return (
     <div
@@ -144,12 +148,19 @@ function VideoPlayer({
         volume={volume}
         muted={muted}
         onProgress={handleProgress}
+        onEnded={() => {
+          setPlayed(1);
+          setPlaying(false);
+          onProgressUpdate({
+            ...progressData,
+            progressValue: 1,
+          });
+        }}
       />
       {showControls && (
         <div
-          className={`absolute bottom-0 left-0 right-0 bg-gray-800 bg-opacity-75 p-4 transition-opacity duration-300 ${
-            showControls ? "opacity-100" : "opacity-0"
-          }`}
+          className={`absolute bottom-0 left-0 right-0 bg-gray-800 bg-opacity-75 p-4 transition-opacity duration-300 ${showControls ? "opacity-100" : "opacity-0"
+            }`}
         >
           <Slider
             value={[played * 100]}

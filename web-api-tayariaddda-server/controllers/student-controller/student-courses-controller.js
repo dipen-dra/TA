@@ -20,8 +20,14 @@ const getCoursesByStudentId = async (req, res) => {
     }
 
     const studentCoursesList = studentBoughtCourses.courses;
+
+    // Deduplicate courses based on courseId
+    const uniqueCourses = Array.from(
+      new Map(studentCoursesList.map(item => [item.courseId, item])).values()
+    );
+
     const courseListWithProgress = await Promise.all(
-      studentCoursesList.map(async (item) => {
+      uniqueCourses.map(async (item) => {
         const progress = await CourseProgress.findOne({
           userId: studentId,
           courseId: item.courseId,
