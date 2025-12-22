@@ -197,13 +197,13 @@ export async function fetchStudentQuizResultsService(userId) {
 }
 
 export async function fetchStudentWeeklyActivityService(userId) {
-  const { data } = await axiosInstance.get(`/student/course/activity/${userId}`);
+  const { data } = await axiosInstance.get(`/student/courses-bought/activity/${userId}`);
 
   return data;
 }
 
 export async function fetchStudentStatsService(userId) {
-  const { data } = await axiosInstance.get(`/student/course/stats/${userId}`);
+  const { data } = await axiosInstance.get(`/student/courses-bought/stats/${userId}`);
 
   return data;
 }

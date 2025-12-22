@@ -74,7 +74,8 @@ function StudentHomePage() {
   }, []);
 
   // --- Derived Data & Mock Data ---
-  const lastActiveCourse = studentBoughtCoursesList && studentBoughtCoursesList.length > 0 ? studentBoughtCoursesList[0] : null;
+  const lastActiveCourse = studentBoughtCoursesList?.find(course => course.progress < 100)
+    || (studentBoughtCoursesList && studentBoughtCoursesList.length > 0 ? studentBoughtCoursesList[0] : null);
   const featuredCourse = studentViewCoursesList && studentViewCoursesList.length > 0 ? studentViewCoursesList[0] : null;
   const heroCourse = lastActiveCourse || featuredCourse;
   const isContinueLearning = !!lastActiveCourse;
@@ -109,9 +110,49 @@ function StudentHomePage() {
               <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
                 Welcome back, <span className="text-blue-600">{auth?.user?.fName || auth?.user?.userName || "Student"}</span>! 👋
               </h1>
-              <p className="text-gray-500 mt-2 text-lg">
-                Your goal for today: <span className="font-semibold text-gray-700">Complete 2 lessons</span> and <span className="font-semibold text-gray-700">take a quiz</span>.
-              </p>
+              <div className="flex flex-col sm:flex-row gap-4 mt-4">
+                {/* Goal 1: Lessons */}
+                <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3 flex items-center gap-3 min-w-[240px]">
+                  <div className="bg-blue-100 p-2 rounded-lg">
+                    <BookOpen className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between text-xs font-semibold mb-1">
+                      <span className="text-gray-700">Daily Lessons</span>
+                      <span className="text-blue-600">
+                        {Math.floor((activityData.find(d => d.day === new Date().toLocaleDateString('en-US', { weekday: 'short' }))?.hours || 0) / 0.5)}/2
+                      </span>
+                    </div>
+                    <div className="w-full bg-blue-200 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className="bg-blue-600 h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${Math.min(((activityData.find(d => d.day === new Date().toLocaleDateString('en-US', { weekday: 'short' }))?.hours || 0) / 0.5 / 2) * 100, 100)}%`
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Goal 2: Quiz */}
+                <div className="bg-purple-50/50 border border-purple-100 rounded-xl p-3 flex items-center gap-3 min-w-[240px]">
+                  <div className="bg-purple-100 p-2 rounded-lg">
+                    <Zap className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between text-xs font-semibold mb-1">
+                      <span className="text-gray-700">Daily Quiz</span>
+                      <span className="text-purple-600">0/1</span>
+                    </div>
+                    <div className="w-full bg-purple-200 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className="bg-purple-600 h-full rounded-full transition-all duration-500"
+                        style={{ width: "0%" }} // Placeholder: Backend support needed for 'Quiz Taken Today'
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
             <div className="flex gap-3">
               <Button onClick={() => navigate('/student/quiz')} className="bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-blue-500/20 transition-all">

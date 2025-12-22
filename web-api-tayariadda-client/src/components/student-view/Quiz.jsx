@@ -62,10 +62,20 @@ const QuizList = () => {
 
         setQuizSets(quizzes);
 
+        const logoMap = {
+          "Premier League Masterclass": "https://upload.wikimedia.org/wikipedia/en/f/f2/Premier_League_Logo.svg",
+          "La Liga Legends": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/LaLiga_logo_2023.svg/256px-LaLiga_logo_2023.svg.png",
+          "Bundesliga Blitz": "https://upload.wikimedia.org/wikipedia/en/d/df/Bundesliga_logo_%282017%29.svg",
+          "Serie A Tactics": "https://upload.wikimedia.org/wikipedia/commons/e/e9/Serie_A_logo_2019.svg",
+          "Ligue 1 & French Football": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Ligue_1_Uber_Eats_logo.svg",
+          "Champions League & World Cup": "https://upload.wikimedia.org/wikipedia/en/b/bf/UEFA_Champions_League_logo_2.svg"
+        };
+
         // Assign icons
         const iconsMap = {};
         quizzes.forEach((quiz, index) => {
-          iconsMap[quiz._id] = quizIcons[index % quizIcons.length];
+          // Use specific logo if available, else random icon
+          iconsMap[quiz._id] = logoMap[quiz.title] || quizIcons[index % quizIcons.length];
         });
         setQuizIconsMap(iconsMap);
 
@@ -90,9 +100,17 @@ const QuizList = () => {
       } catch (error) {
         console.error("Error fetching data:", error);
         setQuizSets(seedQuizzes);
+        const logoMap = {
+          "Premier League Masterclass": "https://upload.wikimedia.org/wikipedia/en/f/f2/Premier_League_Logo.svg",
+          "La Liga Legends": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/LaLiga_logo_2023.svg/256px-LaLiga_logo_2023.svg.png",
+          "Bundesliga Blitz": "https://upload.wikimedia.org/wikipedia/en/d/df/Bundesliga_logo_%282017%29.svg",
+          "Serie A Tactics": "https://upload.wikimedia.org/wikipedia/commons/e/e9/Serie_A_logo_2019.svg",
+          "Ligue 1 & French Football": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Ligue_1_Uber_Eats_logo.svg",
+          "Champions League & World Cup": "https://upload.wikimedia.org/wikipedia/en/b/bf/UEFA_Champions_League_logo_2.svg"
+        };
         const iconsMap = {};
         seedQuizzes.forEach((quiz, index) => {
-          iconsMap[quiz._id] = quizIcons[index % quizIcons.length];
+          iconsMap[quiz._id] = logoMap[quiz.title] || quizIcons[index % quizIcons.length];
         });
         setQuizIconsMap(iconsMap);
       } finally {
@@ -169,13 +187,19 @@ const QuizList = () => {
                     <div className="p-6 flex flex-col h-full">
                       {/* Header with Icon */}
                       <div className="flex justify-between items-start mb-4">
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-sm ${isPassed ? "bg-green-50 text-green-600" :
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-sm overflow-hidden ${isPassed ? "bg-green-50 text-green-600" :
                           isFailed ? "bg-red-50 text-red-600" :
                             index % 3 === 0 ? "bg-blue-50 text-blue-600" :
                               index % 3 === 1 ? "bg-emerald-50 text-emerald-600" :
                                 "bg-orange-50 text-orange-600"
                           }`}>
-                          {isPassed ? "🏆" : isFailed ? "❌" : quizIconsMap[quiz._id]}
+                          {isPassed ? "🏆" : isFailed ? "❌" : (
+                            typeof quizIconsMap[quiz._id] === 'string' && quizIconsMap[quiz._id].startsWith('http') ? (
+                              <img src={quizIconsMap[quiz._id]} alt="logo" className="w-8 h-8 object-contain" />
+                            ) : (
+                              quizIconsMap[quiz._id]
+                            )
+                          )}
                         </div>
 
                         {/* Status Badge */}
