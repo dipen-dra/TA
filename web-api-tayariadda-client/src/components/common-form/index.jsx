@@ -8,6 +8,7 @@ function CommonForm({
   formData,
   setFormData,
   isButtonDisabled = false,
+  children
 }) {
   return (
     <form onSubmit={handleSubmit}>
@@ -17,6 +18,7 @@ function CommonForm({
         formData={formData}
         setFormData={setFormData}
       />
+      {children}
       <Button disabled={isButtonDisabled} type="submit" className="mt-5 w-full">
         {buttonText || "Submit"}
       </Button>

@@ -1,4 +1,5 @@
 const express = require("express");
+const rateLimit = require("express-rate-limit");
 const {
   registerUser,
   loginUser,
@@ -12,12 +13,26 @@ const authenticateMiddleware = require("../../middleware/auth-middleware");
 const User = require("../../models/User"); // Import User model
 const router = express.Router();
 
-router.post("/register", registerUser);
-router.post("/login", loginUser);
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 requests per windowMs
+  message: { success: false, message: "Too many login attempts from this IP, please try again after 15 minutes" },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+const commonAuthLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 30, // Limit each IP to 30 requests per windowMs
+  message: { success: false, message: "Too many requests from this IP, please try again after an hour" },
+});
+
+router.post("/register", commonAuthLimiter, registerUser);
+router.post("/login", loginLimiter, loginUser);
 router.get("/verify-email", verifyEmail);
-router.post("/forgot-password", forgotPassword);
-router.post("/verify-otp", verifyOtp);
-router.post("/reset-password", resetPassword);
+router.post("/forgot-password", commonAuthLimiter, forgotPassword);
+router.post("/verify-otp", commonAuthLimiter, verifyOtp);
+router.post("/reset-password", commonAuthLimiter, resetPassword);
 router.put("/update", authenticateMiddleware, updateUserDetails);
 router.get("/check-auth", authenticateMiddleware, async (req, res) => {
   try {

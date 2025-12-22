@@ -124,24 +124,24 @@ function AuthPage() {
                     setFormData={setSignInFormData}
                     isButtonDisabled={!checkIfSignInFormIsValid()}
                     handleSubmit={handleLoginUser}
-                  />
-
-                  {/* Remember Me & Forgot Password */}
-                  <div className="flex items-center justify-between text-sm">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                      <span className="text-gray-700">Remember me</span>
-                    </label>
-                    <Link
-                      to="/forgot-password"
-                      className="text-blue-600 font-medium hover:underline"
-                    >
-                      Forgot Password?
-                    </Link>
-                  </div>
+                  >
+                    {/* Remember Me & Forgot Password */}
+                    <div className="flex items-center justify-between text-sm mt-3">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <span className="text-gray-700">Remember me</span>
+                      </label>
+                      <Link
+                        to="/forgot-password"
+                        className="text-blue-600 font-medium hover:underline"
+                      >
+                        Forgot Password?
+                      </Link>
+                    </div>
+                  </CommonForm>
 
                   <div className="text-center text-sm text-gray-600">
                     Don't have an account?{" "}

@@ -1,7 +1,22 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { BookOpen, Target, TrendingUp, Bell, ArrowRight, Star, CheckCircle } from "lucide-react";
+import { useContext, useEffect } from "react";
+import { AuthContext } from "@/context/auth-context";
 
 function LandingPage() {
+    const { auth } = useContext(AuthContext);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (auth?.authenticate) {
+            if (auth?.user?.role === "instructor") {
+                navigate("/instructor");
+            } else {
+                navigate("/student/home");
+            }
+        }
+    }, [auth, navigate]);
+
     const features = [
         {
             icon: BookOpen,
