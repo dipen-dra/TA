@@ -17,11 +17,12 @@ import {
   markLectureAsViewedService,
   resetCourseProgressService,
 } from "@/services";
-import { Check, ChevronLeft, ChevronRight, Play, RotateCcw, Menu, X } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Play, RotateCcw, Menu, X, Globe, Award, Calendar, List, User, BookOpen } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 import Confetti from "react-confetti";
 import { useNavigate, useParams } from "react-router-dom";
 import { courseAssetMap } from "@/config/course-assets";
+import BookReader from "@/components/book-reader";
 
 function StudentViewCourseProgressPage() {
   const navigate = useNavigate();
@@ -34,6 +35,7 @@ function StudentViewCourseProgressPage() {
     useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [isSideBarOpen, setIsSideBarOpen] = useState(true);
+  const [activeBook, setActiveBook] = useState(null);
   const { id } = useParams();
 
   async function fetchCurrentCourseProgress() {
@@ -179,13 +181,122 @@ function StudentViewCourseProgressPage() {
               {/* Lecture Details and Navigation */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">{currentLecture?.title}</h2>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">{currentLecture?.title}</h2>
+                    <p className="text-gray-500 mt-1 text-sm font-medium">
+                      {studentCurrentCourseProgress?.courseDetails?.subtitle}
+                    </p>
+                  </div>
                   {/* Placeholder for Next/Prev buttons if needed here, or can be below */}
                 </div>
 
                 {/* Description Area (if needed, or just leave scalable space) */}
                 <div className="prose prose-blue max-w-none text-gray-600">
                   <p>Watch the video fully to mark this lecture as completed.</p>
+                </div>
+
+                {/* Recommended Books Section */}
+                {currentLecture?.recommendedBooks && currentLecture.recommendedBooks.length > 0 && (
+                  <div className="mt-8 pt-6 border-t border-gray-100">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">Recommended Books</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                      {currentLecture.recommendedBooks.map((book, index) => (
+                        <div
+                          key={index}
+                          onClick={() => setActiveBook(book)}
+                          className="group relative bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-xl transition-all cursor-pointer overflow-hidden flex flex-col"
+                        >
+                          <div className="h-40 bg-gray-100 relative overflow-hidden">
+                            {book.coverImage ? (
+                              <img
+                                src={book.coverImage}
+                                alt={book.title}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-300">
+                                <BookOpen className="w-12 h-12" />
+                              </div>
+                            )}
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                              <span className="bg-white/90 text-black px-4 py-2 rounded-full text-sm font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-all">Read Now</span>
+                            </div>
+                          </div>
+                          <div className="p-4 flex-1 flex flex-col">
+                            <h4 className="font-bold text-gray-900 line-clamp-1 group-hover:text-blue-600 transition-colors">{book.title}</h4>
+                            <p className="text-sm text-gray-500 mb-2">{book.author}</p>
+                            <p className="text-xs text-gray-400 line-clamp-2 mt-auto">{book.description}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Important Links / Resources Section (Moved here for better visibility) */}
+                <div className="mt-8 pt-6 border-t border-gray-100">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Important Links & Resources</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <a
+                      href="https://developer.mozilla.org"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all group"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3 group-hover:bg-blue-200">
+                        <span className="text-xl">📚</span>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-800 text-sm">MDN Web Docs</h4>
+                        <p className="text-xs text-gray-500">Web Development Resources</p>
+                      </div>
+                    </a>
+
+                    <a
+                      href="https://stackoverflow.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center p-3 rounded-lg border border-gray-200 hover:border-orange-300 hover:bg-orange-50 transition-all group"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center mr-3 group-hover:bg-orange-200">
+                        <span className="text-xl">💬</span>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-800 text-sm">Stack Overflow</h4>
+                        <p className="text-xs text-gray-500">Community Q&A</p>
+                      </div>
+                    </a>
+
+                    <a
+                      href="https://github.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center p-3 rounded-lg border border-gray-200 hover:border-gray-400 hover:bg-gray-100 transition-all group"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mr-3 group-hover:bg-gray-200">
+                        <span className="text-xl">💻</span>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-800 text-sm">GitHub</h4>
+                        <p className="text-xs text-gray-500">Code Hosting & Collab</p>
+                      </div>
+                    </a>
+
+                    <a
+                      href="https://react.dev"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center p-3 rounded-lg border border-gray-200 hover:border-cyan-300 hover:bg-cyan-50 transition-all group"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-cyan-100 flex items-center justify-center mr-3 group-hover:bg-cyan-200">
+                        <span className="text-xl">⚛️</span>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-800 text-sm">React Documentation</h4>
+                        <p className="text-xs text-gray-500">Official React Guide</p>
+                      </div>
+                    </a>
+                  </div>
                 </div>
 
 
@@ -264,10 +375,66 @@ function StudentViewCourseProgressPage() {
               </TabsContent>
 
               <TabsContent value="overview" className="flex-1 overflow-auto p-6 m-0">
-                <h3 className="text-lg font-bold text-gray-900 mb-3">About this course</h3>
-                <p className="text-gray-600 leading-relaxed text-sm">
-                  {studentCurrentCourseProgress?.courseDetails?.description}
-                </p>
+                <div className="space-y-6">
+                  {/* Description */}
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-3">About this course</h3>
+                    <p className="text-gray-600 leading-relaxed text-sm">
+                      {studentCurrentCourseProgress?.courseDetails?.description}
+                    </p>
+                  </div>
+
+                  {/* Meta Details Grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gray-50 p-3 rounded-lg flex items-center gap-3">
+                      <User className="w-5 h-5 text-blue-500" />
+                      <div>
+                        <p className="text-xs text-gray-500">Instructor</p>
+                        <p className="text-sm font-semibold text-gray-800">{studentCurrentCourseProgress?.courseDetails?.instructorName}</p>
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-lg flex items-center gap-3">
+                      <Calendar className="w-5 h-5 text-blue-500" />
+                      <div>
+                        <p className="text-xs text-gray-500">Updated</p>
+                        <p className="text-sm font-semibold text-gray-800">
+                          {studentCurrentCourseProgress?.courseDetails?.date ? new Date(studentCurrentCourseProgress?.courseDetails?.date).toLocaleDateString() : 'Recently'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-lg flex items-center gap-3">
+                      <Award className="w-5 h-5 text-blue-500" />
+                      <div>
+                        <p className="text-xs text-gray-500">Level</p>
+                        <p className="text-sm font-semibold text-gray-800">{studentCurrentCourseProgress?.courseDetails?.level}</p>
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-lg flex items-center gap-3">
+                      <Globe className="w-5 h-5 text-blue-500" />
+                      <div>
+                        <p className="text-xs text-gray-500">Language</p>
+                        <p className="text-sm font-semibold text-gray-800">{studentCurrentCourseProgress?.courseDetails?.primaryLanguage}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Objectives */}
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      What you'll learn
+                    </h3>
+                    <ul className="space-y-2">
+                      {studentCurrentCourseProgress?.courseDetails?.objectives?.split(';').map((objective, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
+                          <Check className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
+                          <span>{objective.trim()}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+
               </TabsContent>
             </Tabs>
           </div>
@@ -292,6 +459,15 @@ function StudentViewCourseProgressPage() {
         )}
 
       </div>
+
+      {/* Book Reader Modal */}
+      {activeBook && (
+        <BookReader
+          bookUrl={activeBook.bookUrl}
+          title={activeBook.title}
+          onClose={() => setActiveBook(null)}
+        />
+      )}
 
       {/* Locked Course Dialog */}
       <Dialog open={lockCourse}>

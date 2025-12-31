@@ -5,6 +5,15 @@ const LectureSchema = new mongoose.Schema({
   videoUrl: String,
   public_id: String,
   freePreview: Boolean,
+  recommendedBooks: [
+    {
+      title: String,
+      author: String,
+      coverImage: String, // URL for book cover
+      bookUrl: String,    // URL for PDF
+      description: String,
+    }
+  ],
 });
 
 const CourseSchema = new mongoose.Schema({

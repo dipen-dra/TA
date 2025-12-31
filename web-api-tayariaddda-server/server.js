@@ -43,6 +43,8 @@ app.get("/", (req, res) => {
   res.send("✅ Backend Server is Running!");
 });
 
+app.use("/uploads", express.static("uploads"));
+
 
 // ✅ Routes configuration
 app.use("/auth", authRoutes);

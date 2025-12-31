@@ -11,8 +11,9 @@ import {
   mediaBulkUploadService,
   mediaDeleteService,
   mediaUploadService,
+  mediaUploadServiceLocal,
 } from "@/services";
-import { Upload, Trash, FileVideo, Youtube, AlertTriangle } from "lucide-react";
+import { Upload, Trash, FileVideo, Youtube, AlertTriangle, BookOpen, Image, FileText } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -193,6 +194,76 @@ function CourseCurriculum() {
       );
 
       setCourseCurriculumFormData(cpyCourseCurriculumFormData);
+    }
+  }
+
+  // --- Book Management Handlers ---
+
+  function handleAddBook(lectureIndex) {
+    let cpyCourseCurriculumFormData = [...courseCurriculumFormData];
+    const currentLecture = cpyCourseCurriculumFormData[lectureIndex];
+
+    // Initialize recommendedBooks if it doesn't exist
+    if (!currentLecture.recommendedBooks) {
+      currentLecture.recommendedBooks = [];
+    }
+
+    currentLecture.recommendedBooks.push({
+      title: "",
+      author: "",
+      description: "",
+      coverImage: "",
+      bookUrl: "",
+    });
+
+    cpyCourseCurriculumFormData[lectureIndex] = currentLecture;
+    setCourseCurriculumFormData(cpyCourseCurriculumFormData);
+  }
+
+  function handleBookChange(event, lectureIndex, bookIndex, field) {
+    let cpyCourseCurriculumFormData = [...courseCurriculumFormData];
+    const currentLecture = cpyCourseCurriculumFormData[lectureIndex];
+    currentLecture.recommendedBooks[bookIndex][field] = event.target.value;
+
+    setCourseCurriculumFormData(cpyCourseCurriculumFormData);
+  }
+
+  function handleRemoveBook(lectureIndex, bookIndex) {
+    let cpyCourseCurriculumFormData = [...courseCurriculumFormData];
+    const currentLecture = cpyCourseCurriculumFormData[lectureIndex];
+    currentLecture.recommendedBooks.splice(bookIndex, 1);
+    setCourseCurriculumFormData(cpyCourseCurriculumFormData);
+  }
+
+  async function handleBookFileUpload(event, lectureIndex, bookIndex, type) {
+    const selectedFile = event.target.files[0];
+    if (!selectedFile) return;
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    try {
+      setMediaUploadProgress(true);
+      // Use local upload for PDFs to avoid Cloudinary CORS/Access issues, Cloudinary for Images
+      const uploadService = type === 'pdf' ? mediaUploadServiceLocal : mediaUploadService;
+      const response = await uploadService(formData, setMediaUploadProgressPercentage);
+
+      if (response.success) {
+        let cpyCourseCurriculumFormData = [...courseCurriculumFormData];
+        const currentLecture = cpyCourseCurriculumFormData[lectureIndex];
+
+        if (type === 'pdf') {
+          currentLecture.recommendedBooks[bookIndex].bookUrl = response.data.url;
+        } else if (type === 'image') {
+          currentLecture.recommendedBooks[bookIndex].coverImage = response.data.url;
+        }
+
+        setCourseCurriculumFormData(cpyCourseCurriculumFormData);
+        setMediaUploadProgress(false);
+      }
+    } catch (error) {
+      console.error("Book Upload Error:", error);
+      setMediaUploadProgress(false);
     }
   }
 
@@ -391,10 +462,109 @@ function CourseCurriculum() {
                   </div>
                 )}
               </div>
+
+
+              {/* Recommended Books Section */}
+              < div className="mt-8 border-t border-gray-100 pt-6" >
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="text-md font-semibold text-gray-700 flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-blue-600" />
+                    Recommended Books
+                  </h4>
+                  <Button
+                    onClick={() => handleAddBook(index)}
+                    variant="ghost"
+                    size="sm"
+                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                  >
+                    + Add Book
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
+                  {curriculumItem?.recommendedBooks && curriculumItem.recommendedBooks.map((book, bookIndex) => (
+                    <div key={bookIndex} className="bg-white border rounded-lg p-4 shadow-sm relative group">
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="absolute top-2 right-2 h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleRemoveBook(index, bookIndex)}
+                      >
+                        <Trash className="w-3 h-3" />
+                      </Button>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                          <Input
+                            placeholder="Book Title"
+                            value={book.title}
+                            onChange={(e) => handleBookChange(e, index, bookIndex, 'title')}
+                            className="h-9"
+                          />
+                          <Input
+                            placeholder="Author Name"
+                            value={book.author}
+                            onChange={(e) => handleBookChange(e, index, bookIndex, 'author')}
+                            className="h-9"
+                          />
+                          <Input // Textarea/Input for description
+                            placeholder="Brief Description"
+                            value={book.description}
+                            onChange={(e) => handleBookChange(e, index, bookIndex, 'description')}
+                            className="h-9"
+                          />
+                        </div>
+
+                        <div className="space-y-3">
+                          <div className="flex gap-2 items-center">
+                            <div className="flex-1">
+                              <Label htmlFor={`book-cover-${index}-${bookIndex}`} className="cursor-pointer border-dashed border-2 border-gray-200 rounded-md p-2 flex items-center justify-center gap-2 hover:bg-gray-50 text-gray-500 text-xs h-9 overflow-hidden">
+                                <Image className="w-4 h-4" />
+                                {book.coverImage ? "Change Cover" : "Upload Cover"}
+                              </Label>
+                              <Input
+                                id={`book-cover-${index}-${bookIndex}`}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => handleBookFileUpload(e, index, bookIndex, 'image')}
+                              />
+                            </div>
+                            {book.coverImage && <span className="text-xs text-green-600 font-medium">Uploaded</span>}
+                          </div>
+
+                          <div className="flex gap-2 items-center">
+                            <div className="flex-1">
+                              <Label htmlFor={`book-pdf-${index}-${bookIndex}`} className="cursor-pointer border-dashed border-2 border-gray-200 rounded-md p-2 flex items-center justify-center gap-2 hover:bg-gray-50 text-gray-500 text-xs h-9 overflow-hidden">
+                                <FileText className="w-4 h-4" />
+                                {book.bookUrl ? "Change PDF" : "Upload PDF"}
+                              </Label>
+                              <Input
+                                id={`book-pdf-${index}-${bookIndex}`}
+                                type="file"
+                                accept=".pdf"
+                                className="hidden"
+                                onChange={(e) => handleBookFileUpload(e, index, bookIndex, 'pdf')}
+                              />
+                            </div>
+                            {book.bookUrl && <span className="text-xs text-green-600 font-medium">Uploaded</span>}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {(!curriculumItem?.recommendedBooks || curriculumItem.recommendedBooks.length === 0) && (
+                    <p className="text-sm text-gray-400 text-center py-4 bg-gray-50 rounded-lg border border-dashed">
+                      No books added yet. Click "+ Add Book" to attach reading materials.
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           ))}
         </div>
-      </CardContent>
+      </CardContent >
     </Card >
   );
 }

@@ -5,9 +5,44 @@ const {
   deleteMediaFromCloudinary,
 } = require("../../helpers/cloudinary");
 
+const fs = require('fs');
+const path = require('path');
+
 const router = express.Router();
 
 const upload = multer({ dest: "uploads/" });
+
+// Configure Local Storage for PDFs
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const dir = 'uploads/books';
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+
+const uploadLocal = multer({ storage: storage });
+
+router.post("/upload-local", uploadLocal.single("file"), async (req, res) => {
+  try {
+    const url = `${req.protocol}://${req.get('host')}/${req.file.path.replace(/\\/g, "/")}`;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        url: url
+      }
+    });
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({ success: false, message: "Error uploading file locally" });
+  }
+});
 
 router.post("/upload", upload.single("file"), async (req, res) => {
   try {

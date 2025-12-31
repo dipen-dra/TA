@@ -139,9 +139,36 @@ const checkCoursePurchaseInfo = async (req, res) => {
 
 
 
+
+
+const axios = require('axios');
+
+const fetchBookPdf = async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ success: false, message: "URL is required" });
+
+    const response = await axios({
+      url,
+      method: 'GET',
+      responseType: 'stream',
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Access-Control-Allow-Origin', '*'); // Enable CORS for this response explicitly
+
+    response.data.pipe(res);
+
+  } catch (e) {
+    console.error("PDF Proxy Error:", e.message);
+    res.status(500).json({ success: false, message: "Failed to fetch PDF" });
+  }
+};
+
 module.exports = {
   getAllStudentViewCourses,
   getStudentViewCourseDetails,
   checkCoursePurchaseInfo,
-  getAllCourseTitles
+  getAllCourseTitles,
+  fetchBookPdf
 };
