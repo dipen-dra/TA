@@ -22,13 +22,19 @@ const BookReader = ({ bookUrl, title, onClose }) => {
     // Layout Textures
     const [dimensions, setDimensions] = useState({ width: 400, height: 600 }); // Defaults
 
-    // Sound Hook (Placeholder for now until file exists)
-    // const [playFlip] = useSound('/sounds/page-flip.mp3', { volume: 0.5, soundEnabled: isSoundEnabled });
-    const playFlip = useCallback(() => {
-        if (isSoundEnabled) {
-            // console.log("Flip sound play");
-        }
-    }, [isSoundEnabled]);
+    // Sound Hook
+    const [playFlip] = useSound('/sounds/page-flip.mp3', { volume: 0.5, soundEnabled: isSoundEnabled });
+
+    // Keyboard Sound Listener
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                playFlip();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [playFlip]);
 
     // --------------------------------------------------------------------------------
     // Sizing Logic: "Best Fit" Strategy
@@ -159,14 +165,20 @@ const BookReader = ({ bookUrl, title, onClose }) => {
                 {/* Navigation Arrows (Fixed to sides of view) */}
                 <button
                     className="fixed left-4 top-1/2 -translate-y-1/2 z-40 p-3 bg-black/20 hover:bg-black/50 text-white rounded-full backdrop-blur-sm border border-white/10 transition-all hidden md:flex"
-                    onClick={() => bookRef.current?.pageFlip()?.flipPrev()}
+                    onClick={() => {
+                        playFlip(); // Play immediately on click
+                        bookRef.current?.pageFlip()?.flipPrev();
+                    }}
                 >
                     <ChevronLeft size={32} />
                 </button>
 
                 <button
                     className="fixed right-4 top-1/2 -translate-y-1/2 z-40 p-3 bg-black/20 hover:bg-black/50 text-white rounded-full backdrop-blur-sm border border-white/10 transition-all hidden md:flex"
-                    onClick={() => bookRef.current?.pageFlip()?.flipNext()}
+                    onClick={() => {
+                        playFlip(); // Play immediately on click
+                        bookRef.current?.pageFlip()?.flipNext();
+                    }}
                 >
                     <ChevronRight size={32} />
                 </button>
@@ -214,7 +226,6 @@ const BookReader = ({ bookUrl, title, onClose }) => {
                                 mobileScrollSupport={true}
                                 ref={bookRef}
                                 className="shadow-2xl"
-                                onFlip={playFlip}
                                 showPageCorners={true}
                             >
                                 {/* Generate Pages */}
