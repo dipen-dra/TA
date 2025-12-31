@@ -268,6 +268,7 @@ const BookReader = ({ bookUrl, title, onClose }) => {
                                 ref={bookRef}
                                 className="shadow-2xl"
                                 onFlip={handleOnFlip}
+                                onChangeState={handleStateChange}
                                 showPageCorners={true}
                             >
                                 {/* Generate Pages */}
