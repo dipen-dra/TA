@@ -24,17 +24,56 @@ const BookReader = ({ bookUrl, title, onClose }) => {
 
     // Sound Hook
     const [playFlip] = useSound('/sounds/page-flip.mp3', { volume: 0.5, soundEnabled: isSoundEnabled });
+    const isAutoFlipping = useRef(false);
 
     // Keyboard Sound Listener
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                setIsAutoFlipping(); // Mark as auto
                 playFlip();
             }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [playFlip]);
+
+    // Helper to mark auto-flip (prevents double sound)
+    const setIsAutoFlipping = () => {
+        isAutoFlipping.current = true;
+        // Reset after animation (approx 1s)
+        setTimeout(() => {
+            isAutoFlipping.current = false;
+        }, 1500);
+    };
+
+    // Manual Flip Handler (triggered by drag)
+    const handleStateChange = (e) => {
+        // 'flipping' state often happens earlier than onFlip
+        if (e.data === 'flipping' && !isAutoFlipping.current) {
+            playFlip();
+        }
+    };
+
+    const handleOnFlip = (e) => {
+        // Fallback: If state change didn't catch it, or for standard flips
+        // We only play if NOT auto-flipping to avoid double audio
+        if (!isAutoFlipping.current) {
+            // Check if we already played efficiently? 
+            // Actually, handleStateChange is better for "start" detection.
+            // Let's rely on handleStateChange for speed, or just this.
+            // For now, let's use onFlip as the backup for manual drags.
+            // playFlip(); 
+        }
+    };
+
+    // --------------------------------------------------------------------------------
+    // Sizing Logic... (No changes)
+    // --------------------------------------------------------------------------------
+
+    // ... (Inside Return) ...
+
+
 
     // --------------------------------------------------------------------------------
     // Sizing Logic: "Best Fit" Strategy
@@ -166,7 +205,8 @@ const BookReader = ({ bookUrl, title, onClose }) => {
                 <button
                     className="fixed left-4 top-1/2 -translate-y-1/2 z-40 p-3 bg-black/20 hover:bg-black/50 text-white rounded-full backdrop-blur-sm border border-white/10 transition-all hidden md:flex"
                     onClick={() => {
-                        playFlip(); // Play immediately on click
+                        setIsAutoFlipping();
+                        playFlip();
                         bookRef.current?.pageFlip()?.flipPrev();
                     }}
                 >
@@ -176,7 +216,8 @@ const BookReader = ({ bookUrl, title, onClose }) => {
                 <button
                     className="fixed right-4 top-1/2 -translate-y-1/2 z-40 p-3 bg-black/20 hover:bg-black/50 text-white rounded-full backdrop-blur-sm border border-white/10 transition-all hidden md:flex"
                     onClick={() => {
-                        playFlip(); // Play immediately on click
+                        setIsAutoFlipping();
+                        playFlip();
                         bookRef.current?.pageFlip()?.flipNext();
                     }}
                 >
@@ -226,6 +267,7 @@ const BookReader = ({ bookUrl, title, onClose }) => {
                                 mobileScrollSupport={true}
                                 ref={bookRef}
                                 className="shadow-2xl"
+                                onFlip={handleOnFlip}
                                 showPageCorners={true}
                             >
                                 {/* Generate Pages */}
